@@ -12,11 +12,13 @@
     <header>
         <h1>Социальная сеть</h1>
     </header>
-    <label for="email">Электронная почта</label>
-    <input type="text" id="email" name="email" required minlength="8" maxlength="16" size="10" />
-    <label for="password">Пароль</label>
-    <input type="password" id="password" name="password" required minlength="8" maxlength="16" size="10" />
-    <button type="button">Войти</button>
+    <form method="post" id="loginForm">
+        <label for="email">Электронная почта</label>
+        <input type="text" id="email" name="email" required minlength="8" maxlength="16" size="10" />
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required minlength="8" maxlength="16" size="10" />
+        <input type="submit" value="Войти" />
+    </form>
     <main>
         <h5><a href="/register">Зарегистрироваться</a></h5>
     </main>
