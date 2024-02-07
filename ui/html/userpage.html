@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>SN - Моя страница</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/user.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Социальная сеть</h1>
+      <h3>{{ .name }} {{ .surname}}</h3>
+      <nav>
+        <ul>
+          <li><a href="/messages">Список сообщений</a></li>
+          <li><a href="/friends">Список друзей</a></li>
+          <li><a href="/myprofile">Моя страница</a></li>
+          <li><a href="/settings">Настройки</a></li>
+          <li><button id="logoutButton">Выход</button></li>
+        </ul>
+      </nav>
+    </header>
+    <script src="/static/js/cookiesCheck.js" type="text/javascript"></script>
+    <script src="/static/js/userpage.js" type="text/javascript"></script>
+  </body>
+</html>

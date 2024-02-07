@@ -1,3 +1,3 @@
-window.onload=()=>{
-    window.location.href = "/login";
-}
+window.onload = () => {
+  window.location.href = "/login";
+};

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -13,11 +12,10 @@ func router() *http.ServeMux {
 			return
 		}
 		id := r.URL.Path[1:]
-		log.Println(id)
+		userpage(w, r, id)
 	})
 	mux.HandleFunc("/login", login)
 	mux.HandleFunc("/register", register)
-	mux.HandleFunc("/userpage", userpage)
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 	return mux
