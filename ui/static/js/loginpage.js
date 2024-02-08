@@ -1,3 +1,4 @@
+
 function validatePassword() {
   const password = document.getElementById("password").value;
   const email = document.getElementById("email").value;
@@ -36,24 +37,36 @@ form.onsubmit = async (e) => {
   await fetch("/login", {
     method: "POST",
     body: fd,
-  }).then(async (response) => {
-    console.log(response.status);
-    if (response.status === 200) {
-      response.json().then((data) => {
-        let userid = data.userid;
-        let accessToken = data.accessToken;
-        let refreshToken = data.refreshToken;
-        document.cookie = `accessToken=${accessToken};`;
-        document.cookie = `refreshToken=${refreshToken};`;
-        document.cookie = `userid=${userid};`;
-        window.location.href = "/" + userid;
-      });
-      return;
-    }if (response.status === 400) {
-      alert("Неверные имя пользователя или пароль");
+  })
+    .then(async (response) => {
+      console.log(response.status);
+      if (response.status === 200) {
+        response.json().then((data) => {
+          let userid = data.userid;
+          let accessToken = data.accessToken;
+          let refreshToken = data.refreshToken;
+          document.cookie = `accessToken=${accessToken};`;
+          document.cookie = `refreshToken=${refreshToken};`;
+          document.cookie = `userid=${userid};`;
+          window.location.href = "/" + userid;
+        });
+        return;
+      }
+      if (response.status === 400) {
+        alert("Неверные имя пользователя или пароль");
+        return;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+window.onload = () => {
+  checkCookies().then((res) => {
+    if (res) {
+      let userID = getCookie("userid");
+      window.location.href = `/${userID}`;
       return;
     }
-  }).catch((error) => {
-    console.log(error);
   });
 };

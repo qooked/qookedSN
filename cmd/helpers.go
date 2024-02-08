@@ -32,11 +32,10 @@ func GenerateTokenPair(username string, uuid string) (string, string, error) {
 
 	tokenString := GenerateAccessToken(username, uuid)
 
-	// Create Refresh token, this will be used to get new access token.
 	refreshToken := jwt.New(jwt.SigningMethodHS256)
 	refreshToken.Header["kid"] = "signin_2"
 
-	expirationTimeRefreshToken := time.Now().Add(15 * time.Minute).Unix()
+	expirationTimeRefreshToken := time.Now().Add(24 * time.Hour).Unix()
 
 	rtClaims := refreshToken.Claims.(jwt.MapClaims)
 	rtClaims["sub"] = uuid

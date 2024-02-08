@@ -1,4 +1,3 @@
-window.onload = () => console.log(document.cookie);
 function getCookie(cookieName) {
   let cookie = {};
   document.cookie.split(";").forEach(function (el) {
@@ -7,28 +6,15 @@ function getCookie(cookieName) {
   });
   return cookie[cookieName];
 }
-e.preventDefault();
-if (!validatePassword()) {
-  return;
+
+async function checkCookies() {
+  const body = new FormData();
+  body.append("accessToken", getCookie("accessToken"));
+  body.append("refreshToken", getCookie("refreshToken"));
+  body.append("userid", getCookie("userid"));
+  return await fetch("/compare-tokens", { method: "GET", body })
+    .then(async (response) => {
+      return response.status === 200;
+    })
+    .catch((error) => false);
 }
-await fetch("/login", {
-  method: "POST",
-  body: fd,
-})
-  .then(async (response) => {
-    console.log(response.status);
-    if (response.status === 200) {
-      response.json().then((data) => {
-        let access = true;
-        console.log(access);
-      });
-      return;
-    }
-    if (response.status === 400) {
-      alert("Неверные имя пользователя или пароль");
-      return;
-    }
-  })
-  .catch((error) => {
-    console.log(error);
-  });

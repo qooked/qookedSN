@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -13,5 +14,13 @@ func main() {
 	DBinit()
 	defer DBclose()
 	log.Println("Server started")
+	go deleteTokens()
 	http.ListenAndServe(":4000", router())
+}
+
+func deleteTokens() {
+	for {
+		db.Exec("DELETE FROM sessions WHERE expirationDate < ?", time.Now())
+		time.Sleep(time.Hour)
+	}
 }
