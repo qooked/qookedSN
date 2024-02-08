@@ -1,3 +1,5 @@
+import { checkCookies, getCookie } from "./cookiesCheck.js";
+
 window.onload = () => {
     checkCookies().then((res) => {
       if (!res) {

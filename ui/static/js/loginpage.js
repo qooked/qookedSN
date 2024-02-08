@@ -1,3 +1,14 @@
+import { checkCookies, getCookie } from "./cookiesCheck.js";
+window.onload = () => {
+  console.log("aboba");
+  checkCookies().then((res) => {
+    if (res) {
+      let userID = getCookie("userid");
+      window.location.href = `/${userID}`;
+      return;
+    }
+  });
+};
 
 function validatePassword() {
   const password = document.getElementById("password").value;
@@ -58,15 +69,6 @@ form.onsubmit = async (e) => {
       }
     })
     .catch((error) => {
-      console.log(error);
+      alert(error);
     });
-};
-window.onload = () => {
-  checkCookies().then((res) => {
-    if (res) {
-      let userID = getCookie("userid");
-      window.location.href = `/${userID}`;
-      return;
-    }
-  });
 };

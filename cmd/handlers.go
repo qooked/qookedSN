@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"text/template"
 	"time"
@@ -165,26 +164,21 @@ func userpage(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func compareTokens(w http.ResponseWriter, r *http.Request) {
-	log.Println("compareTokens")
 	err := r.ParseMultipartForm(0)
 	accessToken := r.FormValue("accessToken")
 	userid := r.FormValue("userid")
 	var accessTokenDB string
-	err = db.QueryRow("SELECT accessToken, refreshToken FROM userdata.sessions WHERE userid = ?", userid).Scan(&accessTokenDB)
+	err = db.QueryRow("SELECT accessToken FROM userdata.sessions WHERE userid = ?", userid).Scan(&accessTokenDB)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("QueryRow() err: " + err.Error()))
-		log.Println("error")
 		return
 	}
 
 	if accessToken == accessTokenDB {
 		w.WriteHeader(http.StatusOK)
-		log.Println("success")
 		return
 	}
-
-	log.Println("not success")
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {

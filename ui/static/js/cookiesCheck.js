@@ -1,4 +1,4 @@
-function getCookie(cookieName) {
+export function getCookie(cookieName) {
   let cookie = {};
   document.cookie.split(";").forEach(function (el) {
     let [key, value] = el.split("=");
@@ -7,14 +7,16 @@ function getCookie(cookieName) {
   return cookie[cookieName];
 }
 
-async function checkCookies() {
+export async function checkCookies() {
   const body = new FormData();
   body.append("accessToken", getCookie("accessToken"));
   body.append("refreshToken", getCookie("refreshToken"));
   body.append("userid", getCookie("userid"));
-  return await fetch("/compare-tokens", { method: "GET", body })
+  console.log(body);
+  return await fetch("/compare-tokens", { method: "POST", body })
     .then(async (response) => {
+      console.log(response);
       return response.status === 200;
     })
-    .catch((error) => false);
+    .catch((error) => alert(error));
 }
