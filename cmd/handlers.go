@@ -90,7 +90,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		err := r.ParseMultipartForm(0)
 		if err != nil {
-			log.Println("ParseForm() err: ", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -98,21 +97,18 @@ func register(w http.ResponseWriter, r *http.Request) {
 		name := r.FormValue("name")
 		surname := r.FormValue("surname")
 		if (name == "") || (surname == "") {
-			log.Println("Name or surname is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		email := r.FormValue("email")
 		if checkEmail(email) == false {
-			log.Println("Email is not valid")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		password := r.FormValue("password1")
 		if checkPassword(password) == false {
-			log.Println("Password is not valid")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -120,7 +116,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 		var count int
 		db.QueryRow("SELECT COUNT(*) FROM userdata.userdata WHERE email = ?", email).Scan(&count)
 		if count > 0 {
-			log.Println("User with this email already exists")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -199,6 +194,12 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ParseForm() err: " + err.Error()))
 		return
 	}
-	db.Exec("DELETE FROM userdata.sessions WHERE refreshToken = ?", r.FormValue("refreshToken"))
+
+	_, err = db.Exec("DELETE FROM userdata.sessions WHERE refreshToken = ?", r.FormValue("refreshToken"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Exec() err: " + err.Error()))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }

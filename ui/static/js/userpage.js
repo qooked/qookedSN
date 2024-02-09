@@ -35,6 +35,11 @@ logoutButton.onclick = async () => {
         window.location.href = `/login`;
         return;
       }
+      if (response.status == 400) {
+        deleteAllCookies();
+        window.location.href = `/login`;
+        return;
+      }
     })
     .catch((error) => {
       alert(error);
