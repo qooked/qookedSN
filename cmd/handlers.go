@@ -191,3 +191,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[1:]
 	userpage(w, r, id)
 }
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(0)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("ParseForm() err: " + err.Error()))
+		return
+	}
+	db.Exec("DELETE FROM userdata.sessions WHERE refreshToken = ?", r.FormValue("refreshToken"))
+	w.WriteHeader(http.StatusOK)
+}
