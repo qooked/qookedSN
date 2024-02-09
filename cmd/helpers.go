@@ -2,20 +2,48 @@ package main
 
 import (
 	"log"
-	"regexp"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/golang-jwt/jwt"
 )
 
 func checkPassword(password string) bool {
-	regularExpression := regexp.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`)
-	return regularExpression.MatchString(password)
+	hasLower := false
+	hasUpper := false
+	hasDigit := false
+	hasSpecial := false
+
+	for _, char := range password {
+		switch {
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsDigit(char):
+			hasDigit = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+
+	return hasLower && hasUpper && hasDigit && hasSpecial && len(password) >= 8
 }
 
 func checkEmail(email string) bool {
-	regularExpression := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return regularExpression.MatchString(email)
+	atIndex := strings.Index(email, "@")
+	dotIndex := strings.LastIndex(email, ".")
+	if atIndex < 0 || dotIndex < 0 {
+		return false
+	}
+	if atIndex >= dotIndex {
+		return false
+	}
+	if len(email)-dotIndex <= 1 {
+		return false
+	}
+	return true
 }
 
 func GenerateAccessToken(username string, uuid string) string {

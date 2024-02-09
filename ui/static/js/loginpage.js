@@ -44,7 +44,6 @@ form.onsubmit = async (e) => {
     return;
   }
   const fd = new FormData(form);
-  console.log(form);
   await fetch("/login", {
     method: "POST",
     body: fd,

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"text/template"
 	"time"
@@ -36,15 +37,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 		email := r.FormValue("email")
 		password := r.FormValue("password")
-		var stringPassword []byte
-		err = db.QueryRow("SELECT password FROM userdata.userdata WHERE email = ?", email).Scan(&stringPassword)
+		var bytePassword []byte
+		err = db.QueryRow("SELECT password FROM userdata.userdata WHERE email = ?", email).Scan(&bytePassword)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("QueryRow() err: " + err.Error()))
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword(stringPassword, []byte(password))
+		err = bcrypt.CompareHashAndPassword(bytePassword, []byte(password))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("CompareHashAndPassword() err: " + err.Error()))
@@ -78,6 +79,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		ts, err := template.ParseFiles("./ui/html/registerpage.html")
 		if err != nil {
+			log.Println("ParseFiles() err: ", err)
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -88,51 +90,51 @@ func register(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		err := r.ParseMultipartForm(0)
 		if err != nil {
+			log.Println("ParseForm() err: ", err)
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("ParseForm() err: " + err.Error()))
 			return
 		}
 
 		name := r.FormValue("name")
 		surname := r.FormValue("surname")
 		if (name == "") || (surname == "") {
+			log.Println("Name or surname is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		email := r.FormValue("email")
 		if checkEmail(email) == false {
+			log.Println("Email is not valid")
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Email is not valid"))
 			return
 		}
 
 		password := r.FormValue("password1")
 		if checkPassword(password) == false {
+			log.Println("Password is not valid")
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Password is not valid"))
+			return
+		}
+
+		var count int
+		db.QueryRow("SELECT COUNT(*) FROM userdata.userdata WHERE email = ?", email).Scan(&count)
+		if count > 0 {
+			log.Println("User with this email already exists")
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		passwordHashString := string(passwordHash)
-		var count int
-		err = db.QueryRow("SELECT COUNT(*) FROM userdata.userdata WHERE email = ?", email).Scan(&count)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("QueryRow() err: " + err.Error()))
-			return
-		}
 
 		if count < 1 {
 			_, err = db.Exec("INSERT INTO userdata.userdata (name, surname, email, password) VALUES (?, ?, ?, ?)", name, surname, email, passwordHashString)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("QueryRow() err: " + err.Error()))
 				return
 			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("QueryRow() err: " + err.Error()))
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 		return

@@ -39,12 +39,10 @@ form.onsubmit = async (e) => {
   }
   const fd = new FormData(form);
   fd.delete("password2");
-  console.log(form);
   await fetch("/register", {
     method: "POST",
     body: fd,
   }).then(async (response) => {
-    console.log(response.status);
     if (response.status === 200) {
       window.location.href = "/login";
       return;
