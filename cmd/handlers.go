@@ -191,7 +191,6 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("ParseForm() err: " + err.Error()))
 		return
 	}
 

@@ -1,6 +1,10 @@
 import { checkCookies, getCookie } from "./cookiesCheck.js";
 
+var statusFriend
 window.onload = () => {
+  checkFriendship();
+  console.log(statusFriend)
+  document.getElementById("addFriendButton").innerHTML = statusFriend;
   checkCookies().then((res) => {
     if (!res) {
       window.location.href = `/login`;
@@ -18,7 +22,6 @@ function deleteAllCookies() {
     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
   }
 }
-
 logoutButton.onclick = async () => {
   const cookies = new FormData();
   cookies.append("accessToken", getCookie("accessToken"));
@@ -45,3 +48,123 @@ logoutButton.onclick = async () => {
       alert(error);
     });
 };
+
+addFriendButton.onclick = async () => {
+  await checkFriendship();
+  const URL = window.location.href;
+  const data = new FormData();
+  data.append("userid", getCookie("userid"));
+  data.append(
+    "friendid",
+    window.location.href.split("/")[window.location.href.split("/").length - 1]
+  );
+
+  switch (statusFriend) {
+
+    case "Добавить в друзья":
+      await fetch("/add-friend", {
+        method: "POST",
+        body: data,
+      })
+        .then(async (response) => {
+          if (response.status === 200) {
+            statusFriend = "Заявка отправлена";
+            document.getElementById("addFriendButton").disabled = true;
+            document.getElementById("addFriendButton").innerHTML = statusFriend;
+            return;
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+        break;
+
+    case "Удалить из друзей":
+      await fetch("/delete-friend", {
+        method: "POST",
+        body: data,
+      })
+        .then(async (response) => {
+          if (response.status === 200) {
+            statusFriend = "Добавить в друзья";
+            document.getElementById("addFriendButton").disabled = false;
+            document.getElementById("addFriendButton").innerHTML = statusFriend;
+            return;
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+        break;
+
+    case "Принять заявку в друзья":
+      await fetch("/accept-friend", {
+        method: "POST",
+        body: data,
+      })
+        .then(async (response) => {
+          if (response.status === 200) {
+            statusFriend = "Удалить из друзей";
+            document.getElementById("addFriendButton").disabled = false;
+            document.getElementById("addFriendButton").innerHTML = statusFriend;
+            return;
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+        break;
+
+    case "Отменить заявку в друзья":
+      await fetch("/decliene-friend", {
+        method: "POST",
+        body: data,
+      })
+        .then(async (response) => {
+          if (response.status === 200) {
+            statusFriend = "Добавить в друзья";
+            document.getElementById("addFriendButton").disabled = false;
+            document.getElementById("addFriendButton").innerHTML = statusFriend;
+            return;
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+        break;
+  }
+};
+
+async function checkFriendship() {
+  var userid = getCookie("userid");
+  var friendid =
+    window.location.href.split("/")[window.location.href.split("/").length - 1];
+  if (userid === friendid) {
+    document.getElementById("addFriendButton").style.display = "none";
+    return statusFriend;
+  }
+  const data = new FormData();
+  data.append("userid", userid);
+  data.append("friendid", friendid);
+  await fetch("/check-friendship", {
+    method: "POST",
+    body: data,
+  })
+    .then(async (response) => {
+      if (response.status == 200) {
+        statusFriend = "Удалить из друзей";
+        return statusFriend;
+      }
+      if (response.status == 404) {
+        statusFriend = "Добавить в друзья";
+        return statusFriend;
+      }
+      if (response.status == 400) {
+        statusFriend = "Принять заявку в друзья";
+        return;
+      }
+    })
+    .catch((error) => {
+      alert(error);
+    });
+}
