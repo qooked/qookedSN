@@ -1,16 +1,19 @@
 import { checkCookies, getCookie } from "./cookiesCheck.js";
 
-var statusFriend
-window.onload = () => {
-  checkFriendship();
-  console.log(statusFriend)
-  document.getElementById("addFriendButton").innerHTML = statusFriend;
-  checkCookies().then((res) => {
-    if (!res) {
-      window.location.href = `/login`;
-      return;
-    }
-  });
+let statusFriend; // Переменная объявлена в глобальной области видимости
+
+window.onload = async () => {
+    await checkFriendship(); // Ждем завершения выполнения асинхронной функции
+    
+    // После завершения выполнения асинхронной функции, обновляем HTML элемент
+    document.getElementById("addFriendButton").innerHTML = statusFriend;
+    
+    await checkCookies().then((res) => {
+        if (!res) {
+            window.location.href = `/login`;
+            return;
+        }
+    });
 };
 
 function deleteAllCookies() {
@@ -68,7 +71,7 @@ addFriendButton.onclick = async () => {
       })
         .then(async (response) => {
           if (response.status === 200) {
-            statusFriend = "Заявка отправлена";
+            statusFriend = "Отменить заявку";
             document.getElementById("addFriendButton").disabled = true;
             document.getElementById("addFriendButton").innerHTML = statusFriend;
             return;
@@ -77,7 +80,7 @@ addFriendButton.onclick = async () => {
         .catch((error) => {
           alert(error);
         });
-        break;
+      break;
 
     case "Удалить из друзей":
       await fetch("/delete-friend", {
@@ -95,7 +98,7 @@ addFriendButton.onclick = async () => {
         .catch((error) => {
           alert(error);
         });
-        break;
+      break;
 
     case "Принять заявку в друзья":
       await fetch("/accept-friend", {
@@ -113,7 +116,7 @@ addFriendButton.onclick = async () => {
         .catch((error) => {
           alert(error);
         });
-        break;
+      break;
 
     case "Отменить заявку в друзья":
       await fetch("/decliene-friend", {
@@ -131,7 +134,7 @@ addFriendButton.onclick = async () => {
         .catch((error) => {
           alert(error);
         });
-        break;
+      break;
   }
 };
 
@@ -151,15 +154,17 @@ async function checkFriendship() {
     body: data,
   })
     .then(async (response) => {
-      if (response.status == 200) {
+      console.log(response.status);
+      const text = await response.text();
+      if (text === "delete friend") {
         statusFriend = "Удалить из друзей";
         return statusFriend;
       }
-      if (response.status == 404) {
+      if (text === "send invitation") {
         statusFriend = "Добавить в друзья";
         return statusFriend;
       }
-      if (response.status == 400) {
+      if (text === "accept invitation") {
         statusFriend = "Принять заявку в друзья";
         return;
       }
@@ -167,4 +172,5 @@ async function checkFriendship() {
     .catch((error) => {
       alert(error);
     });
-}
+};
+

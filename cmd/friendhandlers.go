@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 )
@@ -8,20 +9,27 @@ import (
 func checkFriendship(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var status bool
+	var status int
 	err = db.QueryRow("SELECT status FROM userdata.friends WHERE userid = ? AND friendid = ?", r.FormValue("userid"), r.FormValue("friendid")).Scan(&status)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		if err == sql.ErrNoRows {
+			w.Write([]byte("send invitation"))
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if status {
+	if status == 0 {
+		w.Write([]byte("accept invitation"))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte("delete friend"))
+	w.WriteHeader(http.StatusOK)
 }
 
 func addFriend(w http.ResponseWriter, r *http.Request) {

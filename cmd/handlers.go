@@ -85,7 +85,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ts.Execute(w, "")
-		break
+		return // тут был break
 
 	case "POST":
 		err := r.ParseMultipartForm(0)
@@ -102,13 +102,13 @@ func register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		email := r.FormValue("email")
-		if checkEmail(email) == false {
+		if !checkEmail(email) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		password := r.FormValue("password1")
-		if checkPassword(password) == false {
+		if !checkPassword(password) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -120,7 +120,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		passwordHashString := string(passwordHash)
 
 		if count < 1 {
@@ -162,6 +162,10 @@ func userpage(w http.ResponseWriter, r *http.Request, id string) {
 
 func compareTokens(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	accessToken := r.FormValue("accessToken")
 	userid := r.FormValue("userid")
 	var accessTokenDB string
