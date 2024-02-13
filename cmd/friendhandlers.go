@@ -4,91 +4,95 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strconv"
 )
 
-func checkFriendship(w http.ResponseWriter, r *http.Request) {
+func changeFriendStatus(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	userid, _ := strconv.Atoi(r.FormValue("userid"))
+	friendid, _ := strconv.Atoi(r.FormValue("friendid"))
+	var useridDB int
+	var friendidDB int
 	var status int
-	err = db.QueryRow("SELECT status FROM userdata.friends WHERE userid = ? AND friendid = ?", r.FormValue("userid"), r.FormValue("friendid")).Scan(&status)
-	if err != nil {
+
+	err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid).Scan(&status, &useridDB, &friendidDB)
+
+	//Отправка заявки в друзья
+	if err == sql.ErrNoRows {
+		err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", friendid, userid).Scan(&status, &useridDB, &friendidDB)
 		if err == sql.ErrNoRows {
-			w.Write([]byte("send invitation"))
-			w.WriteHeader(http.StatusOK)
+			db.Exec("INSERT INTO userdata.friends(userid, friendid, status) VALUES(?,?,?)", userid, friendid, 0)
+			w.Write([]byte("Отменить заявку в друзья"))
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
+	}
+	//Отмена заявки в друзья
+	if status == 0 && useridDB == userid {
+		db.Exec("DELETE FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid)
+		w.Write([]byte("Добавить в друзья"))
 		return
 	}
-	if status == 0 {
-		w.Write([]byte("accept invitation"))
-		w.WriteHeader(http.StatusOK)
+	//Принятие заявки в друзья
+	if status == 0 && friendidDB == userid {
+		db.Exec("UPDATE userdata.friends SET status = 1 WHERE userid = ? AND friendid = ?", useridDB, friendidDB)
+		w.Write([]byte("Удалить из друзей"))
 		return
 	}
-	w.Write([]byte("delete friend"))
-	w.WriteHeader(http.StatusOK)
+	//Удаление из друзей от отправителя
+	if status == 1 && useridDB == userid {
+		db.Exec("DELETE FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid)
+		w.Write([]byte("Добавить в друзья"))
+		return
+	}
+	//Удаление из друзей от получателя
+	if status == 1 && friendidDB == userid {
+		db.Exec("UPDATE userdata.friends SET status = 0 WHERE userid = ? AND friendid = ?", useridDB, friendidDB)
+		w.Write([]byte("Принять зяаявку в друзья"))
+		return
+	}
+	log.Println("error")
 }
 
-func addFriend(w http.ResponseWriter, r *http.Request) {
+func checkFriendStatus(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	//проверить есть ли уже запрос в друзья
-	_, err = db.Exec("INSERT INTO userdata.friends (userid, friendid) VALUES (?, ?)", r.FormValue("userid"), r.FormValue("friendid"))
-	if err != nil {
-		log.Println("aboba1")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
+	userid, _ := strconv.Atoi(r.FormValue("userid"))
+	friendid, _ := strconv.Atoi(r.FormValue("friendid"))
+	var useridDB int
+	var friendidDB int
+	var status int
 
-func deleteFriend(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(0)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	_, err = db.Exec("DELETE FROM userdata.friends WHERE userid = ? AND friendid = ?", r.FormValue("userid"), r.FormValue("friendid"))
-	if err != nil {
-		log.Println("aboba2")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
+	err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid).Scan(&status, &useridDB, &friendidDB)
 
-func acceptFriend(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(0)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	//Отправка заявки в друзья
+	if err == sql.ErrNoRows {
+		err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", friendid, userid).Scan(&status, &useridDB, &friendidDB)
+		if err == sql.ErrNoRows {
+			w.Write([]byte("Добавить в друзья"))
+			return
+		}
+	}
+	//Удаление из друзей
+	if status == 1 {
+		w.Write([]byte("Удалить из друзей"))
 		return
 	}
-	_, err = db.Exec("UPDATE userdata.friends SET status = true where (userid, friendid) = (?, ?)", r.FormValue("userid"), r.FormValue("friendid"))
-	if err != nil {
-		log.Println("aboba3")
-		w.WriteHeader(http.StatusInternalServerError)
+	//Отмена заявки в друзья
+	if status == 0 && useridDB == userid {
+		w.Write([]byte("Отменить заявку в друзья"))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func declineFriend(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(0)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	//Принятие заявки в друзья
+	if status == 0 && friendidDB == userid {
+		w.Write([]byte("Принять заявку в друзья"))
 		return
 	}
-	_, err = db.Exec("DELETE FROM userdata.friends WHERE (userid) = (?)", r.FormValue("userid"))
-	if err != nil {
-		log.Println("aboba4")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	log.Println("error")
 }

@@ -11,11 +11,8 @@ func router() *http.ServeMux {
 	mux.HandleFunc("/register", register)
 	mux.HandleFunc("/compare-tokens", compareTokens)
 	mux.HandleFunc("/logout", logout)
-	mux.HandleFunc("/check-friendship", checkFriendship)
-	mux.HandleFunc("/add-friend", addFriend)
-	mux.HandleFunc("/delete-friend", deleteFriend)
-	mux.HandleFunc("/accept-friend", acceptFriend)
-	mux.HandleFunc("/decline-friend", declineFriend)
+	mux.HandleFunc("/change-friend-status", changeFriendStatus)
+	mux.HandleFunc("/check-friend-status", checkFriendStatus)
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 	return mux
