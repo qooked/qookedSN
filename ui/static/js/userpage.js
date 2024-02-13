@@ -60,15 +60,20 @@ addFriendButton.onclick = async () => {
     body: data,
   })
     .then(async (response) => {
-      const text = await response.text(); // Получение текста из ответа
-      document.getElementById("addFriendButton").innerHTML = text;
-      return;
+      if (response.status == 200) {
+        document.getElementById("addFriendButton").innerHTML = await response.text();
+        return;
+      }
+      if (response.status == 500) {
+        alert()
+        return;
+      }
     })
     .catch((error) => alert(error));
 };
 
 async function checkFriendStatus() {
-  if (getCookie("userid") === window.location.href.split("/")[window.location.href.split("/").length - 1]){
+  if (getCookie("userid") === window.location.href.split("/")[window.location.href.split("/").length - 1]) {
     document.getElementById("addFriendButton").style.display = "none";
     return;
   }
@@ -84,8 +89,14 @@ async function checkFriendStatus() {
     body: data,
   })
     .then(async (response) => {
-      document.getElementById("addFriendButton").innerHTML = await response.text();
-      return;
+      if (response.status == 200) {
+        document.getElementById("addFriendButton").innerHTML = await response.text();
+        return;
+      }
+      if (response.status == 400) {
+        alert()
+        return;
+      }
     })
     .catch((error) => alert(error));
 }
