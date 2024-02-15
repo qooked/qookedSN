@@ -1,21 +1,23 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func router() *mux.Router {
-	gmux := mux.NewRouter()
-	gmux.HandleFunc("/", indexHandler)
-	gmux.HandleFunc("/login", login)
-	gmux.HandleFunc("/register", register)
-	gmux.HandleFunc("/compare-tokens", compareTokens)
-	gmux.HandleFunc("/logout", logout)
-	gmux.HandleFunc("/change-friend-status", changeFriendStatus)
-	gmux.HandleFunc("/check-friend-status", checkFriendStatus)
+	r := mux.NewRouter()
+	r.HandleFunc("/", home)
+	r.HandleFunc("/login", login)
+	r.HandleFunc("/compare-tokens", compareTokens)
+	r.HandleFunc("/register", register)
+	r.HandleFunc("/{id}", userpage)
+	r.HandleFunc("/change-friend-status", changeFriendStatus)
+	r.HandleFunc("/check-friend-status", checkFriendStatus)
+	r.HandleFunc("/logout", logout)
 	staticDir := http.Dir("./ui/static")
 	staticHandler := http.StripPrefix("/static/", http.FileServer(staticDir))
-	gmux.PathPrefix("/static/").Handler(staticHandler)
-	return gmux
+	r.PathPrefix("/static/").Handler(staticHandler)
+	return r
 }

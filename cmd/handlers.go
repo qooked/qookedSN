@@ -7,6 +7,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -137,7 +138,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusBadRequest)
 }
 
-func userpage(w http.ResponseWriter, r *http.Request, id string) {
+func userpage(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
 	var name, surname string
 	err := db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", id).Scan(&name, &surname)
 	if err != nil {
@@ -182,14 +184,14 @@ func compareTokens(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
-		home(w, r)
-		return
-	}
-	id := r.URL.Path[1:]
-	userpage(w, r, id)
-}
+// func indexHandler(w http.ResponseWriter, r *http.Request) {
+// 	if r.URL.Path == "/" {
+// 		home(w, r)
+// 		return
+// 	}
+// 	id := r.URL.Path[1:]
+// 	userpage(w, r)
+// }
 
 func logout(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
