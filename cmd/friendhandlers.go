@@ -2,8 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
+	"text/template"
 )
 
 func changeFriendStatus(w http.ResponseWriter, r *http.Request) {
@@ -99,4 +103,100 @@ func checkFriendStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusBadRequest)
+}
+
+func friendList(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+
+	case "GET":
+
+		ts, err := template.ParseFiles("./ui/html/friendspage.html")
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("ParseFiles() err: ", err)
+			return
+		}
+		ts.Execute(w, "")
+
+	case "POST":
+		type FriendListResponse struct {
+			FriendIDs map[int]string `json:"friendIDs"`
+			Name      string
+			Surname   string
+		}
+		id := strings.Split(r.URL.Path, "/")[1]
+
+		rows, err := db.Query("SELECT userid FROM userdata.friends WHERE friendid = ?", id)
+		defer rows.Close()
+		var friendIDs = make(map[int]string)
+
+		if err == nil {
+			for rows.Next() {
+				var friendID int
+				var friendName, friendSurname string
+				if err := rows.Scan(&friendID); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
+				if err != nil {
+					log.Println(2)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				friendIDs[friendID] = friendName + " " + friendSurname
+			}
+		}
+
+		if err := rows.Err(); err != nil {
+			log.Println(3)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rows, err = db.Query("SELECT friendid FROM userdata.friends WHERE userid = ?", id)
+
+		if err == nil {
+			for rows.Next() {
+				var friendID int
+				var friendName, friendSurname string
+				if err := rows.Scan(&friendID); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
+				if err != nil {
+					log.Println(2)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				friendIDs[friendID] = friendName + " " + friendSurname
+			}
+		}
+
+		var name, surname string
+		err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", id).Scan(&name, &surname)
+		if err != nil {
+			log.Println(6)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := FriendListResponse{
+			FriendIDs: friendIDs,
+			Name:      name,
+			Surname:   surname,
+		}
+
+		jsonResponse, err := json.Marshal(response)
+		if err != nil {
+			log.Println(7)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
+	}
 }

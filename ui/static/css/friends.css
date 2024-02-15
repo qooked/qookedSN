@@ -1,3 +1,26 @@
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+a {
+  display: block;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #4e54c8;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+a:hover {
+  background-color: #f0f0f09d;
+}
+
 body {
   margin: 0;
   padding: 0;

@@ -184,15 +184,6 @@ func compareTokens(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func indexHandler(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path == "/" {
-// 		home(w, r)
-// 		return
-// 	}
-// 	id := r.URL.Path[1:]
-// 	userpage(w, r)
-// }
-
 func logout(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(0)
 	if err != nil {

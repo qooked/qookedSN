@@ -60,11 +60,12 @@ addFriendButton.onclick = async () => {
   })
     .then(async (response) => {
       if (response.status == 200) {
-        document.getElementById("addFriendButton").innerHTML = await response.text();
+        document.getElementById("addFriendButton").innerHTML =
+          await response.text();
         return;
       }
       if (response.status == 500) {
-        alert()
+        alert();
         return;
       }
     })
@@ -72,7 +73,10 @@ addFriendButton.onclick = async () => {
 };
 
 async function checkFriendStatus() {
-  if (getCookie("userid") === window.location.href.split("/")[window.location.href.split("/").length - 1]) {
+  if (
+    getCookie("userid") ===
+    window.location.href.split("/")[window.location.href.split("/").length - 1]
+  ) {
     document.getElementById("addFriendButton").style.display = "none";
     return;
   }
@@ -89,13 +93,20 @@ async function checkFriendStatus() {
   })
     .then(async (response) => {
       if (response.status == 200) {
-        document.getElementById("addFriendButton").innerHTML = await response.text();
+        document.getElementById("addFriendButton").innerHTML =
+          await response.text();
         return;
       }
       if (response.status == 400) {
-        alert()
+        alert();
         return;
       }
     })
     .catch((error) => alert(error));
 }
+
+friendListButton.onclick = () => {
+  var id =
+    window.location.href.split("/")[window.location.href.split("/").length - 1];
+  window.location.href = "/" + id + "/firend-list";
+};
