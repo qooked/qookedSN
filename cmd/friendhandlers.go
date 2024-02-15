@@ -127,7 +127,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 		}
 		id := strings.Split(r.URL.Path, "/")[1]
 
-		rows, err := db.Query("SELECT userid FROM userdata.friends WHERE friendid = ?", id)
+		rows, err := db.Query("SELECT userid FROM userdata.friends WHERE (friendid, status) = (?, 1)", id)
 		defer rows.Close()
 		var friendIDs = make(map[int]string)
 
@@ -155,7 +155,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err = db.Query("SELECT friendid FROM userdata.friends WHERE userid = ?", id)
+		rows, err = db.Query("SELECT friendid FROM userdata.friends WHERE (userid, status) = (?, 1)", id)
 
 		if err == nil {
 			for rows.Next() {
