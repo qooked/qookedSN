@@ -1,6 +1,5 @@
 import { checkCookies, getCookie } from "./cookiesCheck.js";
 
-
 window.onload = async () => {
   await checkFriendStatus();
   await checkCookies().then((res) => {
