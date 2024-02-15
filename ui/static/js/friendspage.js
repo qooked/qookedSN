@@ -16,34 +16,30 @@ async function getFriendList() {
   var id =
     window.location.href.split("/")[window.location.href.split("/").length - 2];
   data.append("id", id);
-  try {
-    const response = await fetch(URL, {
-      method: "GET",
-    });
-  } catch (error) {
-    alert(error.message);
-  }
   const response = await fetch(URL, {
     method: "POST",
     body: data,
   });
+  try {
+    const jsonData = await response.json();
+    const friendMap = jsonData.friendIDs;
 
-  const jsonData = await response.json();
-  const friendMap = jsonData.friendIDs;
+    var friendList = document.getElementById("friendList");
+    var keys = Object.keys(friendMap);
+    var header3 = document.querySelector("header h3");
+    header3.textContent = jsonData.Name + " " + jsonData.Surname;
 
-  var friendList = document.getElementById("friendList");
-  var keys = Object.keys(friendMap);
-  var header3 = document.querySelector("header h3");
-  header3.textContent = jsonData.Name + " " + jsonData.Surname;
+    for (var i = 0; i < keys.length; i++) {
+      var listItem = document.createElement("li");
+      var link = document.createElement("a");
 
-  for (var i = 0; i < keys.length; i++) {
-    var listItem = document.createElement("li");
-    var link = document.createElement("a");
+      link.href = "/" + keys[i];
+      link.textContent = friendMap[keys[i]];
 
-    link.href = "/" + keys[i];
-    link.textContent = friendMap[keys[i]];
-
-    listItem.appendChild(link);
-    friendList.appendChild(listItem);
+      listItem.appendChild(link);
+      friendList.appendChild(listItem);
+    }
+  } catch (err) {
+    console.log(err);
   }
 }

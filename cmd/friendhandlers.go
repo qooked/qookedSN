@@ -131,54 +131,54 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 		defer rows.Close()
 		var friendIDs = make(map[int]string)
 
-		if err == nil {
-			for rows.Next() {
-				var friendID int
-				var friendName, friendSurname string
-				if err := rows.Scan(&friendID); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
-				if err != nil {
-					log.Println(2)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				friendIDs[friendID] = friendName + " " + friendSurname
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		for rows.Next() {
+			var friendID int
+			var friendName, friendSurname string
+			if err := rows.Scan(&friendID); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
+			err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			friendIDs[friendID] = friendName + " " + friendSurname
 		}
 
 		if err := rows.Err(); err != nil {
-			log.Println(3)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		rows, err = db.Query("SELECT friendid FROM userdata.friends WHERE (userid, status) = (?, 1)", id)
 
-		if err == nil {
-			for rows.Next() {
-				var friendID int
-				var friendName, friendSurname string
-				if err := rows.Scan(&friendID); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
-				if err != nil {
-					log.Println(2)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				friendIDs[friendID] = friendName + " " + friendSurname
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		for rows.Next() {
+			var friendID int
+			var friendName, friendSurname string
+			if err := rows.Scan(&friendID); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
+			err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			friendIDs[friendID] = friendName + " " + friendSurname
 		}
 
 		var name, surname string
 		err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", id).Scan(&name, &surname)
 		if err != nil {
-			log.Println(6)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -191,7 +191,6 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 
 		jsonResponse, err := json.Marshal(response)
 		if err != nil {
-			log.Println(7)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
