@@ -18,6 +18,7 @@ func router() *mux.Router {
 	r.HandleFunc("/logout", logout)
 	staticDir := http.Dir("./ui/static")
 	staticHandler := http.StripPrefix("/static/", http.FileServer(staticDir))
+	r.Handle("/static/", staticHandler)
 	r.PathPrefix("/static/").Handler(staticHandler)
 	return r
 }
