@@ -12,8 +12,18 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		accessToken := r.FormValue("accessToken")
 		userid := r.FormValue("userid")
 		log.Println(r.URL.Path, accessToken, userid, "\n")
+		var accessTokenDB string
+		err := db.QueryRow("SELECT accessToken FROM userdata.sessions WHERE userid = ?", userid).Scan(&accessTokenDB)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("QueryRow() err: " + err.Error()))
+			return
+		}
 
-		// Пропускаем запрос дальше по цепочке middleware и хандлеров
-		next.ServeHTTP(w, r)
+		if accessToken == accessTokenDB {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
 	})
 }

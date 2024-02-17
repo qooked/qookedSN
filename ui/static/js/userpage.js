@@ -31,6 +31,11 @@ logoutButton.onclick = async () => {
     body: cookies,
   })
     .then(async (response) => {
+      if (response.status == 401) {
+        deleteAllCookies();
+        window.location.href = `/login`;
+        return;
+      }
       if (response.status == 200) {
         console.log(response.status);
         deleteAllCookies();
@@ -56,11 +61,17 @@ addFriendButton.onclick = async () => {
     "friendid",
     window.location.href.split("/")[window.location.href.split("/").length - 1]
   );
+  data.append("accessToken", getCookie("accessToken"));
   await fetch("/change-friend-status", {
     method: "POST",
     body: data,
   })
     .then(async (response) => {
+      if (response.status == 401) {
+        deleteAllCookies();
+        window.location.href = `/login`;
+        return;
+      }
       if (response.status == 200) {
         document.getElementById("addFriendButton").innerHTML =
           await response.text();
@@ -89,11 +100,17 @@ async function checkFriendStatus() {
     "friendid",
     window.location.href.split("/")[window.location.href.split("/").length - 1]
   );
+  data.append("accessToken", getCookie("accessToken"));
   await fetch("/check-friend-status", {
     method: "POST",
     body: data,
   })
     .then(async (response) => {
+      if (response.status == 401) {
+        deleteAllCookies();
+        window.location.href = `/login`;
+        return;
+      }
       if (response.status == 200) {
         document.getElementById("addFriendButton").innerHTML =
           await response.text();
