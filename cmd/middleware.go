@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -11,7 +10,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		r.ParseMultipartForm(0)
 		accessToken := r.FormValue("accessToken")
 		userid := r.FormValue("userid")
-		log.Println(r.URL.Path, accessToken, userid, "\n")
 		var accessTokenDB string
 		err := db.QueryRow("SELECT accessToken FROM userdata.sessions WHERE userid = ?", userid).Scan(&accessTokenDB)
 		if err != nil {

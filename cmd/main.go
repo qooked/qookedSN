@@ -20,7 +20,7 @@ func main() {
 
 func deleteTokens() {
 	for {
-		db.Exec("DELETE FROM sessions WHERE expirationDate < ?", time.Now())
+		db.Exec("DELETE FROM userdata.sessions WHERE expirationDate < ?", time.Now())
 		time.Sleep(time.Hour)
 	}
 }

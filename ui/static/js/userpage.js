@@ -129,3 +129,7 @@ friendListButton.onclick = () => {
     window.location.href.split("/")[window.location.href.split("/").length - 1];
   window.location.href = "/" + id + "/firend-list";
 };
+
+messagesbutton.onclick = () => {
+  window.location.href = "/" + getCookie("userid") + "/messages";
+}
