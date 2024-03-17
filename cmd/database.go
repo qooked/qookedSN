@@ -2,14 +2,15 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
+
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
 func DBinit() {
-	DB, err := sql.Open("mysql", CFG.DBstring)
+	DB, err := sql.Open("postgres", CFG.DBstring)
 	if err != nil {
 		log.Fatal(err)
 		panic(err)

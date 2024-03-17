@@ -20,13 +20,13 @@ func changeFriendStatus(w http.ResponseWriter, r *http.Request) {
 	friendid, _ := strconv.Atoi(r.FormValue("friendid"))
 	var useridDB, friendidDB, status int
 
-	err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid).Scan(&status, &useridDB, &friendidDB)
+	err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = $1 AND friendid = $2", userid, friendid).Scan(&status, &useridDB, &friendidDB)
 
 	//Отправка заявки в друзья
 	if err == sql.ErrNoRows {
-		err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", friendid, userid).Scan(&status, &useridDB, &friendidDB)
+		err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = $1 AND friendid = $2", friendid, userid).Scan(&status, &useridDB, &friendidDB)
 		if err == sql.ErrNoRows {
-			db.Exec("INSERT INTO userdata.friends(userid, friendid, status) VALUES(?,?,?)", userid, friendid, 0)
+			db.Exec("INSERT INTO userdata.friends(userid, friendid, status) VALUES($1,$2,$3)", userid, friendid, 0)
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("Отменить заявку в друзья"))
 			return
@@ -34,28 +34,28 @@ func changeFriendStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	//Отмена заявки в друзья
 	if status == 0 && useridDB == userid {
-		db.Exec("DELETE FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid)
+		db.Exec("DELETE FROM userdata.friends WHERE userid = $1 AND friendid = $2", userid, friendid)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Добавить в друзья"))
 		return
 	}
 	//Принятие заявки в друзья
 	if status == 0 && friendidDB == userid {
-		db.Exec("UPDATE userdata.friends SET status = 1 WHERE userid = ? AND friendid = ?", useridDB, friendidDB)
+		db.Exec("UPDATE userdata.friends SET status = 1 WHERE userid = $1 AND friendid = $2", useridDB, friendidDB)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Удалить из друзей"))
 		return
 	}
 	//Удаление из друзей от отправителя
 	if status == 1 && useridDB == userid {
-		db.Exec("DELETE FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid)
+		db.Exec("DELETE FROM userdata.friends WHERE userid = $1 AND friendid = $2", userid, friendid)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Добавить в друзья"))
 		return
 	}
 	//Удаление из друзей от получателя
 	if status == 1 && friendidDB == userid {
-		db.Exec("UPDATE userdata.friends SET status = 0 WHERE userid = ? AND friendid = ?", useridDB, friendidDB)
+		db.Exec("UPDATE userdata.friends SET status = 0 WHERE userid = $1 AND friendid = $2", useridDB, friendidDB)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Принять зяаявку в друзья"))
 		return
@@ -73,11 +73,11 @@ func checkFriendStatus(w http.ResponseWriter, r *http.Request) {
 	friendid, _ := strconv.Atoi(r.FormValue("friendid"))
 	var useridDB, friendidDB, status int
 
-	err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", userid, friendid).Scan(&status, &useridDB, &friendidDB)
+	err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = $1 AND friendid = $2", userid, friendid).Scan(&status, &useridDB, &friendidDB)
 
 	//Отправка заявки в друзья
 	if err == sql.ErrNoRows {
-		err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = ? AND friendid = ?", friendid, userid).Scan(&status, &useridDB, &friendidDB)
+		err = db.QueryRow("SELECT status, userid, friendid FROM userdata.friends WHERE userid = $1 AND friendid = $2", friendid, userid).Scan(&status, &useridDB, &friendidDB)
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("Добавить в друзья"))
@@ -127,7 +127,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 		}
 		id := strings.Split(r.URL.Path, "/")[1]
 
-		rows, err := db.Query("SELECT userid FROM userdata.friends WHERE (friendid, status) = (?, 1)", id)
+		rows, err := db.Query("SELECT userid FROM userdata.friends WHERE (friendid, status) = ($1, 1)", id)
 		defer rows.Close()
 		var friendIDs = make(map[int]string)
 
@@ -142,7 +142,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
+			err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = $1", friendID).Scan(&friendName, &friendSurname)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -155,7 +155,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err = db.Query("SELECT friendid FROM userdata.friends WHERE (userid, status) = (?, 1)", id)
+		rows, err = db.Query("SELECT friendid FROM userdata.friends WHERE (userid, status) = ($1, 1)", id)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -168,7 +168,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", friendID).Scan(&friendName, &friendSurname)
+			err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = $1", friendID).Scan(&friendName, &friendSurname)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -177,7 +177,7 @@ func friendList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var name, surname string
-		err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", id).Scan(&name, &surname)
+		err = db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = $1", id).Scan(&name, &surname)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

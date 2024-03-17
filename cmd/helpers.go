@@ -14,7 +14,6 @@ func checkPassword(password string) bool {
 	hasUpper := false
 	hasDigit := false
 	hasSpecial := false
-
 	for _, char := range password {
 		switch {
 		case unicode.IsLower(char):

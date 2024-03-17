@@ -11,7 +11,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		accessToken := r.FormValue("accessToken")
 		userid := r.FormValue("userid")
 		var accessTokenDB string
-		err := db.QueryRow("SELECT accessToken FROM userdata.sessions WHERE userid = ?", userid).Scan(&accessTokenDB)
+		err := db.QueryRow("SELECT accessToken FROM userdata.sessions WHERE userid = $1", userid).Scan(&accessTokenDB)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("QueryRow() err: " + err.Error()))

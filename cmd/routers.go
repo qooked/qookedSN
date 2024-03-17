@@ -16,8 +16,6 @@ func router() *mux.Router {
 	r.Handle("/check-friend-status", loggingMiddleware(http.HandlerFunc(checkFriendStatus)))
 	r.HandleFunc("/{id}", userpage)
 	r.HandleFunc("/{id}/firend-list", friendList)
-	r.HandleFunc("/{id}/messages", parseMessagesForm)
-	r.HandleFunc("/{id}/messages/{friendid}", parseDialogueForm)
 	r.Handle("/logout", loggingMiddleware(http.HandlerFunc(logout)))
 	staticDir := http.Dir("./ui/static")
 	staticHandler := http.StripPrefix("/static/", http.FileServer(staticDir))

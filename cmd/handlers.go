@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"text/template"
@@ -39,7 +40,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		var bytePassword []byte
-		err = db.QueryRow("SELECT password FROM userdata.userdata WHERE email = ?", email).Scan(&bytePassword)
+		err = db.QueryRow("SELECT password FROM userdata WHERE email = $1", email).Scan(&bytePassword)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("QueryRow() err: " + err.Error()))
@@ -54,15 +55,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var userid int
-		err = db.QueryRow("SELECT id FROM userdata.userdata WHERE email = ?", email).Scan(&userid)
+		err = db.QueryRow("SELECT id FROM userdata WHERE email = $1", email).Scan(&userid)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("QueryRow() err: " + err.Error()))
 			return
 		}
 
-		accessToken, refreshToken, err := GenerateTokenPair(email, string(userid))
-		db.Exec("INSERT INTO userdata.sessions (accessToken, refreshToken, userid, expirationDate) VALUES(?, ?, ?, ?)", accessToken, refreshToken, userid, time.Now().UTC().Add(24*time.Hour))
+		accessToken, refreshToken, err := GenerateTokenPair(email, fmt.Sprint(userid))
+		db.Exec("INSERT INTO sessions (accessToken, refreshToken, userid, expirationDate) VALUES($1, $2, $3, $4)", accessToken, refreshToken, userid, time.Now().UTC().Add(24*time.Hour))
 		response := map[string]interface{}{
 			"userid":       userid,
 			"accessToken":  accessToken,
@@ -115,8 +116,14 @@ func register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var count int
-		db.QueryRow("SELECT COUNT(*) FROM userdata.userdata WHERE email = ?", email).Scan(&count)
+		err = db.QueryRow("SELECT COUNT(*) FROM userdata WHERE email = $1", email).Scan(&count)
+		if err != nil {
+			log.Println(err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		if count > 0 {
+
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -125,7 +132,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		passwordHashString := string(passwordHash)
 
 		if count < 1 {
-			_, err = db.Exec("INSERT INTO userdata.userdata (name, surname, email, password) VALUES (?, ?, ?, ?)", name, surname, email, passwordHashString)
+			_, err = db.Exec("INSERT INTO userdata (name, surname, email, password) VALUES ($1, $2, $3, $4)", name, surname, email, passwordHashString)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				return
@@ -141,7 +148,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 func userpage(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	var name, surname string
-	err := db.QueryRow("SELECT name, surname FROM userdata.userdata WHERE id = ?", id).Scan(&name, &surname)
+	err := db.QueryRow("SELECT name, surname FROM userdata WHERE id = $1", id).Scan(&name, &surname)
 	if err != nil {
 		aboba, _ := template.ParseFiles("./ui/html/NotFound.html")
 		aboba.Execute(w, "")
@@ -171,7 +178,7 @@ func compareTokens(w http.ResponseWriter, r *http.Request) {
 	accessToken := r.FormValue("accessToken")
 	userid := r.FormValue("userid")
 	var accessTokenDB string
-	err = db.QueryRow("SELECT accessToken FROM userdata.sessions WHERE userid = ?", userid).Scan(&accessTokenDB)
+	err = db.QueryRow("SELECT accessToken FROM sessions WHERE userid = $1", userid).Scan(&accessTokenDB)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("QueryRow() err: " + err.Error()))
@@ -191,7 +198,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("DELETE FROM userdata.sessions WHERE refreshToken = ?", r.FormValue("refreshToken"))
+	_, err = db.Exec("DELETE FROM sessions WHERE refreshToken = $1", r.FormValue("refreshToken"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Exec() err: " + err.Error()))

@@ -9,3 +9,4 @@ window.onload = async () => {
   });
 };
 
+// Создаем новое соединение WebSocket
